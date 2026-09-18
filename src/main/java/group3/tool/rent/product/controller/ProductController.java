@@ -21,7 +21,7 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> findAll() {
+    public ResponseEntity<List<ProductDTO>> findAll() {
         return ResponseEntity.ok(productService.findAll());
     }
 
@@ -30,13 +30,28 @@ public class ProductController {
         return ResponseEntity.ok(productService.findById(id));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductDTO>> search(@RequestParam String text) {
+        return ResponseEntity.ok(productService.search(text));
+    }
+
     @PostMapping
-    public ResponseEntity<Product> saveProduct(@RequestBody Product product) {
-        Product savedProduct = productService.saveProduct(product);
+    public ResponseEntity<ProductDTO> saveProduct(@RequestBody ProductDTO productDTO) {
+        ProductDTO savedProduct = productService.saveProduct(productDTO);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(savedProduct);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductDTO> updateProduct(
+            @PathVariable Long id,
+            @RequestBody ProductDTO productDTO) {
+
+        return ResponseEntity.ok(
+                productService.updateProduct(id, productDTO)
+        );
     }
 
     @DeleteMapping("/{id}")
