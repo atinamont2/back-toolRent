@@ -1,6 +1,5 @@
 package group3.tool.rent.product.dto;
 
-import group3.tool.rent.user.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,5 +14,5 @@ public class ProductDTO {
     private Double price;
     private Boolean isAvailable;
     private String address;
-    private User owner;
+    private Long ownerId;
 }
