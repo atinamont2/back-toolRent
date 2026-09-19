@@ -1,6 +1,8 @@
 package group3.tool.rent.product.exception;
 
-public class ProductNotFoundException extends RuntimeException {
+import group3.tool.rent.common.ResourceNotFoundException;
+
+public class ProductNotFoundException extends ResourceNotFoundException {
     public ProductNotFoundException(String message) {
         super(message);
     }
