@@ -1,6 +1,8 @@
 package group3.tool.rent.order.exception;
 
-public class OrderNotFoundException extends RuntimeException {
+import group3.tool.rent.common.ResourceNotFoundException;
+
+public class OrderNotFoundException extends ResourceNotFoundException {
     public OrderNotFoundException(String message) {
         super(message);
     }

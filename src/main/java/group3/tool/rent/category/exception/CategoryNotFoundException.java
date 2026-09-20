@@ -1,6 +1,8 @@
 package group3.tool.rent.category.exception;
 
-public class CategoryNotFoundException extends RuntimeException {
+import group3.tool.rent.common.ResourceNotFoundException;
+
+public class CategoryNotFoundException extends ResourceNotFoundException {
     public CategoryNotFoundException(String message) {
         super(message);
     }
