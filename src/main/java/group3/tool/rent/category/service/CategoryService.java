@@ -19,8 +19,14 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    public List<Category> findAll() {
-        return categoryRepository.findAll();
+    public List<CategoryDTO> findAll() {
+        return categoryRepository.findAll().stream()
+                .map(cat -> new CategoryDTO(
+                        cat.getId(),
+                        cat.getName(),
+                        cat.getDescription()
+                ))
+                .toList();
     }
 
     public CategoryDTO findById(Long id) {
@@ -36,9 +42,43 @@ public class CategoryService {
         );        
     }
 
-    public Category create(Category category) {
-    return categoryRepository.save(category);
-}
+    public CategoryDTO create(Category category) {
+    Category savedCategory = categoryRepository.save(category);
+    return new CategoryDTO(
+            savedCategory.getId(),
+            savedCategory.getName(),
+            savedCategory.getDescription()
+    );
+    }
+    public CategoryDTO update(Long id, Category category) {
+    Category existingCategory = categoryRepository.findById(id).orElse(null);
 
+    if (existingCategory == null) {
+        throw new CategoryNotFoundException(
+                "Categoría no encontrada con id: " + id
+        );
+    }
 
+    existingCategory.setName(category.getName());
+    existingCategory.setDescription(category.getDescription());
+
+    Category updatedCategory = categoryRepository.save(existingCategory);
+
+    return new CategoryDTO(
+            updatedCategory.getId(),
+            updatedCategory.getName(),
+            updatedCategory.getDescription()
+    );
+    }
+    public void delete(Long id) {
+        Category category = categoryRepository.findById(id).orElse(null);
+
+        if (category == null) {
+            throw new CategoryNotFoundException(
+                    "Categoría no encontrada con id: " + id
+            );
+        }
+
+        categoryRepository.delete(category);
+    }
 }

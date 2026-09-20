@@ -1,5 +1,3 @@
-
-
 package group3.tool.rent.category.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
