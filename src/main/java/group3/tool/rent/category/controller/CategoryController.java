@@ -19,7 +19,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Category>> findAll() {
+    public ResponseEntity<List<CategoryDTO>> findAll() {
         return ResponseEntity.ok(categoryService.findAll());
     }
 
@@ -28,7 +28,20 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.findById(id));
     }
     @PostMapping
-    public ResponseEntity<Category> create(@RequestBody Category category) {
-    return ResponseEntity.ok(categoryService.create(category));
+    public ResponseEntity<CategoryDTO> create(@RequestBody Category category) {
+        return ResponseEntity.ok(categoryService.create(category));
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryDTO> update(
+        @PathVariable Long id,
+        @RequestBody Category category) {
+
+    return ResponseEntity.ok(categoryService.update(id, category));
+}
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        categoryService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
