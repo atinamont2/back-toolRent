@@ -2,11 +2,11 @@ package group3.tool.rent.order.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import group3.tool.rent.order.dto.OrderDTO;
 import group3.tool.rent.order.dto.OrderRequestDTO;
-import group3.tool.rent.order.model.Order;
 import group3.tool.rent.order.service.OrderService;
 
 import java.util.List;
@@ -22,18 +22,18 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> findAll() {
-        return ResponseEntity.ok(orderService.findAll());
+    public ResponseEntity<List<OrderDTO>> findAll(Authentication authentication) {
+        return ResponseEntity.ok(orderService.findAll(authentication));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDTO> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.findById(id));
+    public ResponseEntity<OrderDTO> findById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(orderService.findById(id, authentication));
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequestDTO request) {
-        Order savedOrder = orderService.createOrder(request);
+    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderRequestDTO request, Authentication authentication) {
+        OrderDTO savedOrder = orderService.createOrder(request, authentication);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -41,13 +41,13 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<Order> cancelOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.cancelOrder(id));
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(orderService.cancelOrder(id, authentication));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrderById(@PathVariable Long id) {
-        orderService.deleteOrderById(id);
+    public ResponseEntity<Void> deleteOrderById(@PathVariable Long id, Authentication authentication) {
+        orderService.deleteOrderById(id, authentication);
 
         return ResponseEntity.noContent().build();
     }

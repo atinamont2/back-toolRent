@@ -11,7 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderRequestDTO {
-    private Long userId;
     private LocalDate startDate;
     private LocalDate endDate;
     private List<OrderItemRequestDTO> items;

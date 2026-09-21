@@ -1,7 +1,6 @@
 package group3.tool.rent.order.dto;
 
 import group3.tool.rent.order.model.OrderStatus;
-import group3.tool.rent.user.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDTO {
     private Long id;
-    private User user;
+    private Long userId;
     private LocalDateTime orderDate;
     private LocalDate startDate;
     private LocalDate endDate;
