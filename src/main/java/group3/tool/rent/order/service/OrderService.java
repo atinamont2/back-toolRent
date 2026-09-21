@@ -32,8 +32,8 @@ public class OrderService {
     private final ProductRepository productRepository;
 
     public OrderService(OrderRepository orderRepository,
-                         UserRepository userRepository,
-                         ProductRepository productRepository) {
+            UserRepository userRepository,
+            ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
@@ -83,8 +83,7 @@ public class OrderService {
 
             if (!Boolean.TRUE.equals(product.getIsAvailable())) {
                 throw new ProductNotAvailableException(
-                        "El producto '" + product.getName() + "' no está disponible para alquilar"
-                );
+                        "El producto '" + product.getName() + "' no está disponible para alquilar");
             }
 
             OrderItem item = new OrderItem();
@@ -156,8 +155,6 @@ public class OrderService {
         boolean isOwner = order.getUser().getId().equals(currentUser.getId());
 
         if (!isOwner && !isAdmin(authentication)) {
-            // Se devuelve "no encontrado" en vez de "prohibido" para no revelar
-            // la existencia de pedidos de otros usuarios a quien no es su dueño.
             throw new ResourceNotFoundException("Pedido no encontrado con id: " + order.getId());
         }
     }
@@ -169,8 +166,7 @@ public class OrderService {
                         item.getProduct().getId(),
                         item.getQuantity(),
                         item.getUnitPrice(),
-                        item.getSubtotal()
-                ))
+                        item.getSubtotal()))
                 .collect(Collectors.toList());
 
         return new OrderDTO(
@@ -181,7 +177,6 @@ public class OrderService {
                 order.getEndDate(),
                 order.getTotalAmount(),
                 order.getStatus(),
-                itemDTOs
-        );
+                itemDTOs);
     }
 }
