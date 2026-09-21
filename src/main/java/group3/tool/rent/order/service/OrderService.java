@@ -1,27 +1,27 @@
 package group3.tool.rent.order.service;
 
+import group3.tool.rent.common.ResourceNotFoundException;
 import group3.tool.rent.order.dto.OrderDTO;
 import group3.tool.rent.order.dto.OrderItemDTO;
 import group3.tool.rent.order.dto.OrderItemRequestDTO;
 import group3.tool.rent.order.dto.OrderRequestDTO;
-import group3.tool.rent.order.exception.OrderNotFoundException;
 import group3.tool.rent.order.exception.ProductNotAvailableException;
 import group3.tool.rent.order.model.Order;
 import group3.tool.rent.order.model.OrderItem;
 import group3.tool.rent.order.model.OrderStatus;
 import group3.tool.rent.order.repository.OrderRepository;
-import group3.tool.rent.product.exception.ProductNotFoundException;
 import group3.tool.rent.product.model.Product;
 import group3.tool.rent.product.repository.ProductRepository;
-import group3.tool.rent.user.exception.UserNotFoundException;
 import group3.tool.rent.user.model.User;
 import group3.tool.rent.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -39,24 +39,31 @@ public class OrderService {
         this.productRepository = productRepository;
     }
 
-    public List<Order> findAll() {
-        return orderRepository.findAll();
+    public List<OrderDTO> findAll(Authentication authentication) {
+        User currentUser = getAuthenticatedUser(authentication);
+
+        List<Order> orders = isAdmin(authentication)
+                ? orderRepository.findAll()
+                : orderRepository.findByUserId(currentUser.getId());
+
+        return orders.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public OrderDTO findById(Long id) {
+    public OrderDTO findById(Long id, Authentication authentication) {
         Order order = orderRepository.findById(id).orElse(null);
         if (order == null) {
-            throw new OrderNotFoundException("Pedido no encontrado con id: " + id);
+            throw new ResourceNotFoundException("Pedido no encontrado con id: " + id);
         }
+
+        assertOwnerOrAdmin(order, authentication);
 
         return toDTO(order);
     }
 
-    public Order createOrder(OrderRequestDTO request) {
-        User user = userRepository.findById(request.getUserId()).orElse(null);
-        if (user == null) {
-            throw new UserNotFoundException("Usuario no encontrado con id: " + request.getUserId());
-        }
+    public OrderDTO createOrder(OrderRequestDTO request, Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
 
         Order order = new Order();
         order.setUser(user);
@@ -71,7 +78,7 @@ public class OrderService {
         for (OrderItemRequestDTO itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId()).orElse(null);
             if (product == null) {
-                throw new ProductNotFoundException("Producto no encontrado con id: " + itemRequest.getProductId());
+                throw new ResourceNotFoundException("Producto no encontrado con id: " + itemRequest.getProductId());
             }
 
             if (!Boolean.TRUE.equals(product.getIsAvailable())) {
@@ -97,14 +104,17 @@ public class OrderService {
         order.setItems(items);
         order.setTotalAmount(total);
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        return toDTO(savedOrder);
     }
 
-    public Order cancelOrder(Long id) {
+    public OrderDTO cancelOrder(Long id, Authentication authentication) {
         Order order = orderRepository.findById(id).orElse(null);
         if (order == null) {
-            throw new OrderNotFoundException("Pedido no encontrado con id: " + id);
+            throw new ResourceNotFoundException("Pedido no encontrado con id: " + id);
         }
+
+        assertOwnerOrAdmin(order, authentication);
 
         order.setStatus(OrderStatus.CANCELLED);
 
@@ -114,28 +124,58 @@ public class OrderService {
             productRepository.save(product);
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        return toDTO(savedOrder);
     }
 
-    public void deleteOrderById(Long id) {
+    public void deleteOrderById(Long id, Authentication authentication) {
+        Order order = orderRepository.findById(id).orElse(null);
+        if (order == null) {
+            throw new ResourceNotFoundException("Pedido no encontrado con id: " + id);
+        }
+
+        assertOwnerOrAdmin(order, authentication);
+
         orderRepository.deleteById(id);
     }
 
-    private OrderDTO toDTO(Order order) {
-        List<OrderItemDTO> itemDTOs = new ArrayList<>();
-        for (OrderItem item : order.getItems()) {
-            itemDTOs.add(new OrderItemDTO(
-                    item.getId(),
-                    item.getProduct(),
-                    item.getQuantity(),
-                    item.getUnitPrice(),
-                    item.getSubtotal()
-            ));
+    private User getAuthenticatedUser(Authentication authentication) {
+        String email = authentication.getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + email));
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().toUpperCase().contains("ADMIN"));
+    }
+
+    private void assertOwnerOrAdmin(Order order, Authentication authentication) {
+        User currentUser = getAuthenticatedUser(authentication);
+
+        boolean isOwner = order.getUser().getId().equals(currentUser.getId());
+
+        if (!isOwner && !isAdmin(authentication)) {
+            // Se devuelve "no encontrado" en vez de "prohibido" para no revelar
+            // la existencia de pedidos de otros usuarios a quien no es su dueño.
+            throw new ResourceNotFoundException("Pedido no encontrado con id: " + order.getId());
         }
+    }
+
+    private OrderDTO toDTO(Order order) {
+        List<OrderItemDTO> itemDTOs = order.getItems().stream()
+                .map(item -> new OrderItemDTO(
+                        item.getId(),
+                        item.getProduct().getId(),
+                        item.getQuantity(),
+                        item.getUnitPrice(),
+                        item.getSubtotal()
+                ))
+                .collect(Collectors.toList());
 
         return new OrderDTO(
                 order.getId(),
-                order.getUser(),
+                order.getUser().getId(),
                 order.getOrderDate(),
                 order.getStartDate(),
                 order.getEndDate(),
