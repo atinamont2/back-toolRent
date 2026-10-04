@@ -1,5 +1,6 @@
 package group3.tool.rent.category.service;
 
+import group3.tool.rent.category.dto.CategoryRequest;
 import group3.tool.rent.category.exception.CategoryNotFoundException;
 import group3.tool.rent.category.repository.CategoryRepository;
 import group3.tool.rent.category.dto.CategoryDTO;
@@ -29,11 +30,9 @@ public class CategoryService {
                 .toList();
     }
 
-    public CategoryDTO findById(Long id) {
-        Category cat = categoryRepository.findById(id).orElse(null);
-        if (cat == null) {
-            throw new CategoryNotFoundException("Categoría no encontrada con id: " + id );
-        }
+    public CategoryDTO findById(Long id) {        
+        Category cat = categoryRepository.findById(id)
+            .orElseThrow(() -> new CategoryNotFoundException("Categoría no encontrada con id: " + id));
 
         return new CategoryDTO(
                 cat.getId(),
@@ -42,7 +41,11 @@ public class CategoryService {
         );        
     }
 
-    public CategoryDTO create(Category category) {
+    public CategoryDTO create(CategoryRequest request) {
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+
     Category savedCategory = categoryRepository.save(category);
     return new CategoryDTO(
             savedCategory.getId(),
@@ -50,17 +53,12 @@ public class CategoryService {
             savedCategory.getDescription()
     );
     }
-    public CategoryDTO update(Long id, Category category) {
-    Category existingCategory = categoryRepository.findById(id).orElse(null);
+    public CategoryDTO update(Long id, CategoryRequest request) {
+    Category existingCategory = categoryRepository.findById(id)
+            .orElseThrow(() -> new CategoryNotFoundException("Categoría no encontrada con id: " + id));
 
-    if (existingCategory == null) {
-        throw new CategoryNotFoundException(
-                "Categoría no encontrada con id: " + id
-        );
-    }
-
-    existingCategory.setName(category.getName());
-    existingCategory.setDescription(category.getDescription());
+    existingCategory.setName(request.getName());
+    existingCategory.setDescription(request.getDescription());
 
     Category updatedCategory = categoryRepository.save(existingCategory);
 
@@ -70,6 +68,7 @@ public class CategoryService {
             updatedCategory.getDescription()
     );
     }
+
     public void delete(Long id) {
         Category category = categoryRepository.findById(id).orElse(null);
 
