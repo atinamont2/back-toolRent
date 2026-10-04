@@ -1,71 +1,82 @@
 package group3.tool.rent.user.service;
 
-import org.springframework.stereotype.Service;
-
-import group3.tool.rent.user.dto.UserDTO;
+import group3.tool.rent.user.dto.UserRequestDTO;
+import group3.tool.rent.user.dto.UserResponseDTO;
 import group3.tool.rent.user.exception.UserNotFoundException;
 import group3.tool.rent.user.model.User;
 import group3.tool.rent.user.repository.UserRepository;
-
 import jakarta.transaction.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public UserDTO findById(Long id) {
-        User user = userRepository.findById(id).orElse(null);
+    public List<UserResponseDTO> findAll() {
+        List<UserResponseDTO> users = new ArrayList<>();
 
-        if (user == null) {
-            throw new UserNotFoundException(
-                "Usuario no encontrado con id: " + id
-            );
+        for (User user : userRepository.findAll()) {
+            users.add(toDTO(user));
         }
 
-        return new UserDTO(
-            user.getId(),
-            user.getName(),
-            user.getLastName(),
-            user.getEmail()
-        );
+        return users;
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    public UserResponseDTO findById(Long id) {
+        return toDTO(findUserOrThrow(id));
     }
 
-    public User updateUser(Long id, User user) {
-        User existingUser = userRepository.findById(id).orElse(null);
+    public UserResponseDTO saveUser(UserRequestDTO request) {
+        User user = new User();
+        copyRequestToUser(request, user);
 
-        if (existingUser == null) {
-            throw new UserNotFoundException(
-                "Usuario no encontrado con id: " + id
-            );
-        }
+        return toDTO(userRepository.save(user));
+    }
 
-        existingUser.setName(user.getName());
-        existingUser.setLastName(user.getLastName());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setPassword(user.getPassword());
+    public UserResponseDTO updateUser(Long id, UserRequestDTO request) {
+        User user = findUserOrThrow(id);
+        copyRequestToUser(request, user);
 
-        return userRepository.save(existingUser);
+        return toDTO(userRepository.save(user));
     }
 
     public void deleteUserById(Long id) {
-        User user = userRepository.findById(id).orElse(null);
+        User user = findUserOrThrow(id);
+        userRepository.delete(user);
+    }
 
-        if (user == null) {
-            throw new UserNotFoundException(
-                "Usuario no encontrado con id: " + id
-            );
-        }
+    private User findUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(
+                        "Usuario no encontrado con id: " + id
+                ));
+    }
 
-        userRepository.deleteById(id);
+    private void copyRequestToUser(UserRequestDTO request, User user) {
+        user.setName(request.getName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+    }
+
+    private UserResponseDTO toDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getLastName(),
+                user.getEmail()
+        );
     }
 }
