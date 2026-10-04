@@ -3,7 +3,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import group3.tool.rent.category.dto.CategoryDTO;
-import group3.tool.rent.category.model.Category;
+import group3.tool.rent.category.dto.CategoryRequest;
+import org.springframework.http.HttpStatus;
 import group3.tool.rent.category.service.CategoryService;
 
 import java.util.List;
@@ -28,16 +29,16 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.findById(id));
     }
     @PostMapping
-    public ResponseEntity<CategoryDTO> create(@RequestBody Category category) {
+    public ResponseEntity<CategoryDTO> create(@RequestBody CategoryRequest category) {
         return ResponseEntity.ok(categoryService.create(category));
     }
     @PutMapping("/{id}")
     public ResponseEntity<CategoryDTO> update(
         @PathVariable Long id,
-        @RequestBody Category category) {
+        @RequestBody CategoryRequest request) {
 
-    return ResponseEntity.ok(categoryService.update(id, category));
-}
+    return ResponseEntity.ok(categoryService.update(id, request));
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
