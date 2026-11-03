@@ -1,5 +1,4 @@
-package group3.tool.rent.user.dto;
-
+package group3.tool.rent.category.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,10 +6,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
-
+public class CategoryDTO {
     private Long id;
     private String name;
-    private String lastName;
-    private String email;
+    private String description;    
 }
