@@ -57,10 +57,30 @@ public class ProductService {
     }
 
     public ProductDTO saveProduct(ProductDTO productDTO) {
+        if (productDTO.getOwnerId() == null) {
+            throw new IllegalArgumentException("El ID del propietario no puede ser nulo.");
+        }
+
         User owner = userRepository.findById(productDTO.getOwnerId()).orElse(null);
         if (owner == null) {
             throw new UserNotFoundException("Usuario no encontrado con id: " + productDTO.getOwnerId());
         }
+
+        Product product = new Product();
+        product.setName(productDTO.getName());
+        product.setDescription(productDTO.getDescription());
+        product.setPrice(productDTO.getPrice());
+        product.setIsAvailable(productDTO.getIsAvailable());
+        product.setAddress(productDTO.getAddress());
+        product.setOwner(owner);
+
+        Product savedProduct = productRepository.save(product);
+        return toDTO(savedProduct);
+    }
+
+    public ProductDTO saveProduct(ProductDTO productDTO, String userEmail) {
+        User owner = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con email: " + userEmail));
 
         Product product = new Product();
         product.setName(productDTO.getName());

@@ -5,9 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import group3.tool.rent.product.dto.ProductDTO;
-import group3.tool.rent.product.model.Product;
 import group3.tool.rent.product.service.ProductService;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -36,8 +36,8 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> saveProduct(@RequestBody ProductDTO productDTO) {
-        ProductDTO savedProduct = productService.saveProduct(productDTO);
+    public ResponseEntity<ProductDTO> saveProduct(@RequestBody ProductDTO productDTO, Principal principal) {
+        ProductDTO savedProduct = productService.saveProduct(productDTO, principal.getName());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
